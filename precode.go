@@ -1,58 +1,50 @@
 package main
 
 import (
-    "net/http"
-    "net/http/httptest"
-    "strconv"
-    "strings"
-    "testing"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 var cafeList = map[string][]string{
-    "moscow": []string{"Мир кофе", "Сладкоежка", "Кофе и завтраки", "Сытый студент"},
+	"moscow": {"Мир кофе", "Сладкоежка", "Кофе и завтраки", "Сытый студент"},
 }
 
 func mainHandle(w http.ResponseWriter, req *http.Request) {
-    countStr := req.URL.Query().Get("count")
-    if countStr == "" {
-        w.WriteHeader(http.StatusBadRequest)
-        w.Write([]byte("count missing"))
-        return
-    }
+	if req.URL.Path != "/cafe" {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 
-    count, err := strconv.Atoi(countStr)
-    if err != nil {
-        w.WriteHeader(http.StatusBadRequest)
-        w.Write([]byte("wrong count value"))
-        return
-    }
+	countStr := req.URL.Query().Get("count")
+	if countStr == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("count missing"))
+		return
+	}
 
-    city := req.URL.Query().Get("city")
+	count, err := strconv.Atoi(countStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("wrong count value"))
+		return
+	}
 
-    cafe, ok := cafeList[city]
-    if !ok {
-        w.WriteHeader(http.StatusBadRequest)
-        w.Write([]byte("wrong city value"))
-        return
-    }
+	city := req.URL.Query().Get("city")
 
-    if count > len(cafe) {
-        count = len(cafe)
-    }
+	cafe, ok := cafeList[city]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("wrong city value"))
+		return
+	}
 
-    answer := strings.Join(cafe[:count], ",")
+	if count > len(cafe) {
+		count = len(cafe)
+	}
 
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(answer))
-}
+	answer := strings.Join(cafe[:count], ",")
 
-func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
-    totalCount := 4
-    req := ... // здесь нужно создать запрос к сервису
-
-    responseRecorder := httptest.NewRecorder()
-    handler := http.HandlerFunc(mainHandle)
-    handler.ServeHTTP(responseRecorder, req)
-
-    // здесь нужно добавить необходимые проверки
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(answer))
 }
